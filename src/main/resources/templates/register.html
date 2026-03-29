@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 个人博客</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/theme.css}" rel="stylesheet">
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            position: relative;
+            overflow: hidden;
+            padding: 2rem 0;
+        }
+        
+        .auth-page::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+            top: -50%;
+            left: -50%;
+            animation: rotate 25s linear infinite;
+        }
+        
+        .auth-page::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50%;
+            width: 100%;
+            height: 200px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23f8fafc' fill-opacity='1' d='M0,160L48,176C96,192,192,224,288,218.7C384,213,480,171,576,165.3C672,160,768,192,864,197.3C960,203,1056,181,1152,165.3C1248,149,1344,139,1392,133.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+            background-size: cover;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .auth-card {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .auth-card .brand {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .auth-card .brand-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 10px 25px -5px rgba(17, 153, 142, 0.4);
+        }
+        
+        .auth-card .brand-icon i {
+            font-size: 1.75rem;
+            color: white;
+        }
+        
+        .auth-card .brand h3 {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-card .brand p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .auth-card .form-floating {
+            margin-bottom: 0.75rem;
+        }
+        
+        .auth-card .form-floating > .form-control {
+            height: 50px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-color);
+        }
+        
+        .auth-card .form-floating > .form-control:focus {
+            border-color: #11998e;
+            box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.15);
+        }
+        
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 4px;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+            background: var(--border-color);
+        }
+        
+        .password-strength.weak { width: 33%; background: #ef4444; }
+        .password-strength.medium { width: 66%; background: #f59e0b; }
+        .password-strength.strong { width: 100%; background: #10b981; }
+        
+        .auth-card .terms {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .auth-card .terms a {
+            color: #11998e;
+            text-decoration: none;
+        }
+        
+        .auth-card .terms a:hover {
+            text-decoration: underline;
+        }
+        
+        .auth-card .btn-register {
+            width: 100%;
+            height: 48px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border: none;
+            box-shadow: 0 4px 14px 0 rgba(17, 153, 142, 0.39);
+        }
+        
+        .auth-card .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.23);
+        }
+        
+        .auth-card .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .auth-card .login-link a {
+            color: #11998e;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .back-home {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 10;
+        }
+        
+        .back-home a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .back-home a:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="auth-page">
+        <div class="back-home">
+            <a href="/">
+                <i class="bi bi-arrow-left"></i> 返回首页
+            </a>
+        </div>
+        
+        <div class="auth-card fade-in">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <h3>创建账户</h3>
+                <p>加入我们的博客社区</p>
+            </div>
+
+            <div id="error-message" class="alert alert-danger d-flex align-items-center d-none">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span></span>
+            </div>
+            
+            <div id="success-message" class="alert alert-success d-flex align-items-center d-none">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span></span>
+            </div>
+
+            <form id="register-form">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="username" placeholder="用户名" required minlength="3" maxlength="20">
+                            <label for="username">用户名 *</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="nickname" placeholder="昵称">
+                            <label for="nickname">昵称</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="email" class="form-control" id="email" placeholder="邮箱">
+                    <label for="email"><i class="bi bi-envelope me-2"></i>邮箱</label>
+                </div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="password" placeholder="密码" required minlength="6">
+                    <label for="password"><i class="bi bi-lock me-2"></i>密码 *</label>
+                </div>
+                <div class="password-strength" id="password-strength"></div>
+                
+                <div class="form-floating">
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="确认密码" required>
+                    <label for="confirmPassword"><i class="bi bi-lock-fill me-2"></i>确认密码 *</label>
+                </div>
+                
+                <div class="terms">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms">我同意 <a href="#">服务条款</a> 和 <a href="#">隐私政策</a></label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-register">
+                    <i class="bi bi-person-plus me-2"></i>注册
+                </button>
+            </form>
+
+            <div class="login-link">
+                已有账户? <a href="/login">立即登录</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (token) window.location.href = '/';
+        
+        // 密码强度检测
+        document.getElementById('password').addEventListener('input', (e) => {
+            const pwd = e.target.value;
+            const strength = document.getElementById('password-strength');
+            strength.className = 'password-strength';
+            
+            if (pwd.length === 0) return;
+            if (pwd.length < 6) strength.classList.add('weak');
+            else if (pwd.length < 10) strength.classList.add('medium');
+            else strength.classList.add('strong');
+        });
+        
+        // 用户名检测
+        let checkTimeout;
+        document.getElementById('username').addEventListener('input', (e) => {
+            clearTimeout(checkTimeout);
+            const username = e.target.value;
+            if (username.length < 3) return;
+            
+            checkTimeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/auth/check?username=${username}`);
+                    const data = await res.json();
+                    if (!data.available) {
+                        showError('用户名已存在');
+                    }
+                } catch (e) {}
+            }, 500);
+        });
+        
+        function showError(msg) {
+            const el = document.getElementById('error-message');
+            el.querySelector('span').textContent = msg;
+            el.classList.remove('d-none');
+            document.getElementById('success-message').classList.add('d-none');
+        }
+        
+        function showSuccess(msg) {
+            const el = document.getElementById('success-message');
+            el.querySelector('span').textContent = msg;
+            el.classList.remove('d-none');
+            document.getElementById('error-message').classList.add('d-none');
+        }
+        
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const nickname = document.getElementById('nickname').value;
+            const email = document.getElementById('email').value;
+            
+            if (password !== confirmPassword) {
+                return showError('两次密码不一致');
+            }
+            
+            if (password.length < 6) {
+                return showError('密码长度至少6个字符');
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, password, nickname: nickname || username, email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('nickname', data.nickname);
+                    
+                    showSuccess('注册成功！正在跳转...');
+                    setTimeout(() => window.location.href = '/', 1500);
+                } else {
+                    showError(data.message || '注册失败');
+                }
+            } catch (error) {
+                showError('网络错误，请稍后重试');
+            }
+        });
+    </script>
+</body>
+</html>

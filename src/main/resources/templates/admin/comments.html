@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>文章</th>
+                            <th>评论人</th>
+                            <th>内容</th>
+                            <th>时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comment-table">
+                        <tr><td colspan="6" class="text-center">加载中...</td></tr>
+                    </tbody>
+                </table>
+                
+                <nav>
+                    <ul class="pagination" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let currentPage = 0;
+        const pageSize = 10;
+        
+        function loadComments(page = 0) {
+            currentPage = page;
+            
+            api(`/api/admin/comments?page=${page}&size=${pageSize}`).then(res => res.json()).then(data => {
+                const tbody = document.getElementById('comment-table');
+                if (data.content.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">暂无数据</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.content.map(comment => `
+                    <tr>
+                        <td>${comment.id}</td>
+                        <td>${comment.article?.title || '-'}</td>
+                        <td>${comment.nickname || comment.username}</td>
+                        <td>${comment.content.substring(0, 50)}${comment.content.length > 50 ? '...' : ''}</td>
+                        <td>${comment.createdAt ? new Date(comment.createdAt).toLocaleString() : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteComment(${comment.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Pagination
+                const totalPages = data.totalPages;
+                if (totalPages > 1) {
+                    let html = '';
+                    for (let i = 0; i < totalPages; i++) {
+                        html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadComments(${i})">${i + 1}</a></li>`;
+                    }
+                    document.getElementById('pagination').innerHTML = html;
+                }
+            });
+        }
+        
+        function deleteComment(id) {
+            if (!confirm('确定要删除该评论吗？')) return;
+            api(`/api/admin/comments/${id}`, { method: 'DELETE' })
+                .then(() => loadComments(currentPage));
+        }
+        
+        loadComments();
+    </script>
+</body>
+</html>

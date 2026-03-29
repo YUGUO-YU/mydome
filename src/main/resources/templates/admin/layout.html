@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">管理后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/theme.css}" rel="stylesheet">
+    <style>
+        .admin-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .sidebar-brand i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+        
+        .menu-label {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.75rem 1.5rem 0.5rem;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+        
+        .sidebar-item.active {
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .sidebar-item i {
+            font-size: 1.1rem;
+            width: 24px;
+        }
+        
+        .admin-main {
+            margin-left: 260px;
+            padding: 0;
+            min-height: 100vh;
+            background: var(--bg-color);
+        }
+        
+        .admin-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .admin-header h4 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .admin-content {
+            padding: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.1); color: var(--primary-color); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--accent-color); }
+        .stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        
+        .stat-number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .table-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        
+        .table-card .card-header {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table thead th {
+            background: var(--bg-color) !important;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0.875rem 1rem;
+        }
+        
+        .table tbody td {
+            padding: 0.875rem 1rem;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.03);
+        }
+        
+        .badge-role {
+            padding: 0.35rem 0.65rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-super { background: #fef3c7; color: #d97706; }
+        .badge-admin { background: #dbeafe; color: #2563eb; }
+        .badge-user { background: #f3f4f6; color: #6b7280; }
+        
+        .badge-status {
+            padding: 0.35rem 0.65rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-active { background: #d1fae5; color: #059669; }
+        .badge-banned { background: #fee2e2; color: #dc2626; }
+        
+        .btn-action {
+            padding: 0.35rem 0.65rem;
+            font-size: 0.8rem;
+            border-radius: var(--radius-sm);
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-sidebar { display: none; }
+            .admin-main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="admin-sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-gear-fill"></i>
+            <span>管理后台</span>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="menu-label">概览</div>
+            <a class="sidebar-item" href="/admin">
+                <i class="bi bi-house-door"></i> 首页
+            </a>
+            
+            <div class="menu-label">内容管理</div>
+            <a class="sidebar-item" href="/admin/users">
+                <i class="bi bi-people"></i> 用户管理
+            </a>
+            <a class="sidebar-item" href="/admin/articles">
+                <i class="bi bi-file-text"></i> 文章管理
+            </a>
+            <a class="sidebar-item" href="/admin/categories">
+                <i class="bi bi-folder"></i> 分类管理
+            </a>
+            <a class="sidebar-item" href="/admin/comments">
+                <i class="bi bi-chat-dots"></i> 评论管理
+            </a>
+            
+            <div class="menu-label">系统</div>
+            <a class="sidebar-item" href="/admin/settings">
+                <i class="bi bi-sliders"></i> 系统设置
+            </a>
+            <a class="sidebar-item" href="/admin/logs">
+                <i class="bi bi-clock-history"></i> 操作日志
+            </a>
+            
+            <div class="menu-label" style="margin-top: 1rem;"></div>
+            <a class="sidebar-item" href="#" onclick="logout()">
+                <i class="bi bi-box-arrow-right"></i> 退出
+            </a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="admin-main">
+        <!-- 顶部导航 -->
+        <div class="admin-header">
+            <h4><i class="bi bi-gear me-2"></i><span th:text="${title}">管理后台</span></h4>
+            <div class="header-user">
+                <span id="admin-name" class="text-muted"></span>
+                <img src="" class="user-avatar" id="admin-avatar" alt="头像">
+                <a href="/" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-house me-1"></i> 返回前台
+                </a>
+            </div>
+        </div>
+        
+        <!-- 内容区域 -->
+        <div class="admin-content" th:replace="~{::content}"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        if (!token || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
+            window.location.href = '/admin/login';
+        }
+        
+        document.getElementById('admin-name').textContent = localStorage.getItem('username') || '管理员';
+        document.getElementById('admin-avatar').src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + localStorage.getItem('username');
+        
+        const isSuperAdmin = role === 'SUPER_ADMIN';
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/admin/login';
+        }
+        
+        function api(url, options = {}) {
+            options.headers = options.headers || {};
+            options.headers['Authorization'] = 'Bearer ' + token;
+            if (options.body && typeof options.body === 'object') {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(options.body);
+            }
+            return fetch(url, options);
+        }
+        
+        // 激活当前菜单
+        const path = window.location.pathname;
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            if (item.getAttribute('href') === path) {
+                item.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

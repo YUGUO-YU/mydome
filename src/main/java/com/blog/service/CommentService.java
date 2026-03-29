@@ -34,6 +34,10 @@ public class CommentService {
         return comments.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    public Comment getCommentById(Long id) {
+        return commentRepository.findById(id).orElseThrow(() -> new RuntimeException("评论不存在"));
+    }
+
     @Transactional
     public CommentDTO createComment(CommentDTO dto, Long userId) {
         Comment comment = new Comment();

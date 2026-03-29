@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <input type="text" class="form-control d-inline-block" style="width: 200px" id="searchKeyword" placeholder="搜索用户名...">
+                        <select class="form-select d-inline-block" style="width: 120px" id="filterStatus">
+                            <option value="">全部状态</option>
+                            <option value="ACTIVE">正常</option>
+                            <option value="BANNED">禁用</option>
+                        </select>
+                        <select class="form-select d-inline-block" style="width: 120px" id="filterRole">
+                            <option value="">全部角色</option>
+                            <option value="USER">普通用户</option>
+                            <option value="ADMIN">管理员</option>
+                            <option value="SUPER_ADMIN">超级管理员</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadUsers()">搜索</button>
+                    </div>
+                </div>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>昵称</th>
+                            <th>邮箱</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>登录次数</th>
+                            <th>最后登录</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table">
+                        <tr><td colspan="9" class="text-center">加载中...</td></tr>
+                    </tbody>
+                </table>
+                
+                <nav>
+                    <ul class="pagination" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let currentPage = 0;
+        const pageSize = 10;
+        
+        function loadUsers(page = 0) {
+            currentPage = page;
+            const keyword = document.getElementById('searchKeyword').value;
+            const status = document.getElementById('filterStatus').value;
+            const role = document.getElementById('filterRole').value;
+            
+            let url = `/api/admin/users?page=${page}&size=${pageSize}`;
+            if (keyword) url += `&keyword=${keyword}`;
+            if (status) url += `&status=${status}`;
+            if (role) url += `&role=${role}`;
+            
+            api(url).then(res => res.json()).then(data => {
+                const tbody = document.getElementById('user-table');
+                if (data.content.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center">暂无数据</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.content.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.nickname || '-'}</td>
+                        <td>${user.email || '-'}</td>
+                        <td><span class="badge bg-${getRoleBadge(user.role)}">${user.role}</span></td>
+                        <td><span class="badge bg-${user.status === 'ACTIVE' ? 'success' : 'danger'}">${user.status === 'ACTIVE' ? '正常' : '禁用'}</span></td>
+                        <td>${user.loginCount || 0}</td>
+                        <td>${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '-'}</td>
+                        <td>
+                            ${isSuperAdmin && user.role !== 'SUPER_ADMIN' ? `
+                                <button class="btn btn-sm btn-outline-${user.status === 'ACTIVE' ? 'danger' : 'success'}" onclick="toggleUserStatus(${user.id}, '${user.status === 'ACTIVE' ? 'BANNED' : 'ACTIVE'}')">
+                                    ${user.status === 'ACTIVE' ? '禁用' : '启用'}
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="changeUserRole(${user.id}, '${user.role === 'USER' ? 'ADMIN' : 'USER'}')">
+                                    ${user.role === 'USER' : '设为管理员' : '取消管理员'}
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})">删除</button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Pagination
+                const totalPages = data.totalPages;
+                if (totalPages > 1) {
+                    let html = '';
+                    for (let i = 0; i < totalPages; i++) {
+                        html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadUsers(${i})">${i + 1}</a></li>`;
+                    }
+                    document.getElementById('pagination').innerHTML = html;
+                }
+            });
+        }
+        
+        function getRoleBadge(role) {
+            if (role === 'SUPER_ADMIN') return 'danger';
+            if (role === 'ADMIN') return 'warning';
+            return 'secondary';
+        }
+        
+        function toggleUserStatus(id, status) {
+            if (!confirm('确定要' + (status === 'BANNED' ? '禁用' : '启用') + '该用户吗？')) return;
+            api(`/api/admin/users/${id}/status`, { method: 'PUT', body: { status } })
+                .then(() => loadUsers(currentPage));
+        }
+        
+        function changeUserRole(id, role) {
+            if (!confirm('确定要修改该用户的角色吗？')) return;
+            api(`/api/admin/users/${id}/role`, { method: 'PUT', body: { role } })
+                .then(() => loadUsers(currentPage));
+        }
+        
+        function deleteUser(id) {
+            if (!confirm('确定要删除该用户吗？此操作不可恢复！')) return;
+            api(`/api/admin/users/${id}`, { method: 'DELETE' })
+                .then(() => loadUsers(currentPage));
+        }
+        
+        loadUsers();
+    </script>
+</body>
+</html>

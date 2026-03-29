@@ -6,6 +6,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -33,6 +35,21 @@ public class User {
 
     @Column(length = 20)
     private String role = "USER";
+
+    @Column(length = 20)
+    private String status = "ACTIVE";
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
+    @Column(name = "login_count")
+    private Integer loginCount = 0;
+
+    @Column(length = 500)
+    private String bio;
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    private List<Article> articles = new ArrayList<>();
 
     @CreationTimestamp
     @Column(updatable = false)

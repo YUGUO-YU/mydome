@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">站点基本信息</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">站点名称</label>
+                            <input type="text" class="form-control" id="site_name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">站点描述</label>
+                            <textarea class="form-control" id="site_description" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">站点Logo URL</label>
+                            <input type="text" class="form-control" id="site_logo">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">ICP备案号</label>
+                            <input type="text" class="form-control" id="icp_number">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">公安备案号</label>
+                            <input type="text" class="form-control" id="police_number">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">公安备案链接</label>
+                            <input type="text" class="form-control" id="police_link">
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="card-title mb-4">功能设置</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="comment_enabled">
+                            <label class="form-check-label" for="comment_enabled">开启评论功能</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="registration_enabled">
+                            <label class="form-check-label" for="registration_enabled">开放用户注册</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Load settings
+        api('/api/admin/settings').then(res => res.json()).then(data => {
+            document.getElementById('site_name').value = data.site_name || '';
+            document.getElementById('site_description').value = data.site_description || '';
+            document.getElementById('site_logo').value = data.site_logo || '';
+            document.getElementById('icp_number').value = data.icp_number || '';
+            document.getElementById('police_number').value = data.police_number || '';
+            document.getElementById('police_link').value = data.police_link || '';
+            document.getElementById('comment_enabled').checked = data.comment_enabled === 'true';
+            document.getElementById('registration_enabled').checked = data.registration_enabled === 'true';
+        });
+        
+        function saveSettings() {
+            const settings = {
+                site_name: document.getElementById('site_name').value,
+                site_description: document.getElementById('site_description').value,
+                site_logo: document.getElementById('site_logo').value,
+                icp_number: document.getElementById('icp_number').value,
+                police_number: document.getElementById('police_number').value,
+                police_link: document.getElementById('police_link').value,
+                comment_enabled: document.getElementById('comment_enabled').checked.toString(),
+                registration_enabled: document.getElementById('registration_enabled').checked.toString()
+            };
+            
+            api('/api/admin/settings', { method: 'PUT', body: settings })
+                .then(res => res.json())
+                .then(() => alert('设置保存成功'));
+        }
+    </script>
+</body>
+</html>

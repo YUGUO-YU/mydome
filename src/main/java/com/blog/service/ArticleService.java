@@ -9,8 +9,7 @@ import com.blog.repository.CategoryRepository;
 import com.blog.repository.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,13 +28,14 @@ public class ArticleService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<ArticleDTO> getArticles(Pageable pageable) {
-        Page<Article> articles = articleRepository.findByStatus("PUBLISHED", pageable);
+    public List<ArticleDTO> getArticles(int page, int size) {
+        List<Article> articles = articleRepository.findByStatusOrderByCreatedAtDesc("PUBLISHED", PageRequest.of(page, size));
         return articles.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    public List<ArticleDTO> getArticlesByCategory(Long categoryId, Pageable pageable) {
-        Page<Article> articles = articleRepository.findByCategoryId(categoryId, pageable);
+    public List<ArticleDTO> getArticlesByCategory(Long categoryId, int page, int size) {
+        List<Article> articles = articleRepository.findByCategoryIdAndStatusOrderByCreatedAtDesc(
+            categoryId, "PUBLISHED", PageRequest.of(page, size));
         return articles.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
@@ -97,7 +97,7 @@ public class ArticleService {
     }
 
     public List<ArticleDTO> getPopularArticles(int limit) {
-        List<Article> articles = articleRepository.findTopByViewCount(Pageable.ofSize(limit));
+        List<Article> articles = articleRepository.findTopByViewCount(PageRequest.of(0, limit));
         return articles.stream().map(this::toDTO).collect(Collectors.toList());
     }
 

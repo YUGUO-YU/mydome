@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2 class="text-primary" id="user-count">-</h2>
+                        <p class="text-muted mb-0">用户总数</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2 class="text-success" id="article-count">-</h2>
+                        <p class="text-muted mb-0">文章总数</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2 class="text-warning" id="comment-count">-</h2>
+                        <p class="text-muted mb-0">评论总数</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2 class="text-info" id="category-count">-</h2>
+                        <p class="text-muted mb-0">分类总数</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">最近注册用户</div>
+                    <div class="card-body" id="recent-users">
+                        加载中...
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">最新文章</div>
+                    <div class="card-body" id="recent-articles">
+                        加载中...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Load stats
+        api('/api/admin/users?size=1').then(res => res.json()).then(data => {
+            document.getElementById('user-count').textContent = data.totalElements || 0;
+        });
+        
+        api('/api/admin/articles?size=1').then(res => res.json()).then(data => {
+            document.getElementById('article-count').textContent = data.totalElements || 0;
+        });
+        
+        api('/api/admin/comments?size=1').then(res => res.json()).then(data => {
+            document.getElementById('comment-count').textContent = data.totalElements || 0;
+        });
+        
+        api('/api/admin/categories').then(res => res.json()).then(data => {
+            document.getElementById('category-count').textContent = data.length || 0;
+        });
+        
+        // Recent users
+        api('/api/admin/users?size=5').then(res => res.json()).then(data => {
+            document.getElementById('recent-users').innerHTML = data.content.length ? 
+                data.content.map(u => `<div class="border-bottom py-2">${u.username} - ${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}</div>`).join('') :
+                '<p class="text-muted">暂无数据</p>';
+        });
+        
+        // Recent articles
+        api('/api/admin/articles?size=5').then(res => res.json()).then(data => {
+            document.getElementById('recent-articles').innerHTML = data.content.length ?
+                data.content.map(a => `<div class="border-bottom py-2"><a href="/article?id=${a.id}">${a.title}</a></div>`).join('') :
+                '<p class="text-muted">暂无数据</p>';
+        });
+    </script>
+</body>
+</html>

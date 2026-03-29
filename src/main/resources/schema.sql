@@ -1,5 +1,5 @@
 -- =============================================
--- Personal Blog Database Schema
+-- Personal Blog Database Schema (Updated)
 -- =============================================
 
 -- Create database
@@ -8,7 +8,7 @@ CREATE DATABASE IF NOT EXISTS blog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4
 USE blog;
 
 -- =============================================
--- User Table
+-- User Table (Updated)
 -- =============================================
 DROP TABLE IF EXISTS user;
 CREATE TABLE user (
@@ -19,9 +19,14 @@ CREATE TABLE user (
     email VARCHAR(100),
     avatar VARCHAR(255),
     role VARCHAR(20) DEFAULT 'USER',
+    status VARCHAR(20) DEFAULT 'ACTIVE',
+    last_login_at DATETIME,
+    login_count INT DEFAULT 0,
+    bio VARCHAR(500),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_username (username)
+    INDEX idx_username (username),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =============================================
@@ -100,12 +105,47 @@ CREATE TABLE article_like (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =============================================
+-- System Setting Table (NEW)
+-- =============================================
+DROP TABLE IF EXISTS system_setting;
+CREATE TABLE system_setting (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(50) NOT NULL UNIQUE,
+    setting_value TEXT,
+    setting_type VARCHAR(20) DEFAULT 'STRING',
+    description VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统设置表';
+
+-- =============================================
+-- Operation Log Table (NEW)
+-- =============================================
+DROP TABLE IF EXISTS operation_log;
+CREATE TABLE operation_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,
+    username VARCHAR(50),
+    operation VARCHAR(50) NOT NULL,
+    target_type VARCHAR(30) NOT NULL,
+    target_id BIGINT,
+    target_name VARCHAR(100),
+    ip_address VARCHAR(50),
+    user_agent VARCHAR(500),
+    detail TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_operation (operation),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
+
+-- =============================================
 -- Insert Default Data
 -- =============================================
 
--- Insert default admin user (password: admin123)
-INSERT INTO user (username, password, nickname, email, role) VALUES 
-('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', '博主', 'admin@blog.com', 'ADMIN');
+-- Insert default admin user (password: admin123, BCrypt encrypted)
+INSERT INTO user (username, password, nickname, email, role, status) VALUES 
+('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92dGxj68yLGi8zCWAzrE', '博主', 'admin@blog.com', 'SUPER_ADMIN', 'ACTIVE');
 
 -- Insert sample categories
 INSERT INTO category (name, description) VALUES 
@@ -124,3 +164,15 @@ INSERT INTO article (title, content, summary, category_id, author_id, status, vi
 INSERT INTO comment (article_id, user_id, content) VALUES 
 (1, 1, '欢迎欢迎！'),
 (2, 1, '写得不错，收藏了');
+
+-- Insert default system settings
+INSERT INTO system_setting (setting_key, setting_value, setting_type, description) VALUES 
+('site_name', '我的博客', 'STRING', '站点名称'),
+('site_description', '一个分享知识的个人博客', 'STRING', '站点描述'),
+('site_logo', '/images/logo.png', 'STRING', '站点Logo'),
+('icp_number', '', 'STRING', 'ICP备案号'),
+('police_number', '', 'STRING', '公安备案号'),
+('police_link', '', 'STRING', '公安备案链接'),
+('comment_enabled', 'true', 'BOOLEAN', '是否开启评论'),
+('registration_enabled', 'true', 'BOOLEAN', '是否开放注册'),
+('default_role', 'USER', 'STRING', '新用户默认角色');

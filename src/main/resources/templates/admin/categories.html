@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="card">
+            <div class="card-body">
+                <button class="btn btn-primary mb-3" onclick="showAddModal()">新增分类</button>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>分类名称</th>
+                            <th>描述</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-table">
+                        <tr><td colspan="5" class="text-center">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Modal -->
+        <div class="modal fade" id="categoryModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">新增分类</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="categoryId">
+                        <div class="mb-3">
+                            <label class="form-label">分类名称</label>
+                            <input type="text" class="form-control" id="categoryName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" id="categoryDesc" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" onclick="saveCategory()">保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let modal;
+        
+        function loadCategories() {
+            api('/api/admin/categories').then(res => res.json()).then(data => {
+                const tbody = document.getElementById('category-table');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">暂无数据</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(cat => `
+                    <tr>
+                        <td>${cat.id}</td>
+                        <td>${cat.name}</td>
+                        <td>${cat.description || '-'}</td>
+                        <td>${cat.createdAt ? new Date(cat.createdAt).toLocaleDateString() : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editCategory(${cat.id}, '${cat.name}', '${cat.description || ''}')">编辑</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${cat.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            });
+        }
+        
+        function showAddModal() {
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryDesc').value = '';
+            document.getElementById('modalTitle').textContent = '新增分类';
+            modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            modal.show();
+        }
+        
+        function editCategory(id, name, desc) {
+            document.getElementById('categoryId').value = id;
+            document.getElementById('categoryName').value = name;
+            document.getElementById('categoryDesc').value = desc;
+            document.getElementById('modalTitle').textContent = '编辑分类';
+            modal = new bootstrap.Modal(document.getElementById('categoryModal'));
+            modal.show();
+        }
+        
+        function saveCategory() {
+            const id = document.getElementById('categoryId').value;
+            const data = {
+                name: document.getElementById('categoryName').value,
+                description: document.getElementById('categoryDesc').value
+            };
+            
+            if (!data.name) return alert('请输入分类名称');
+            
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/api/admin/categories/${id}` : '/api/admin/categories';
+            
+            api(url, { method, body: data }).then(() => {
+                modal.hide();
+                loadCategories();
+            });
+        }
+        
+        function deleteCategory(id) {
+            if (!confirm('确定要删除该分类吗？')) return;
+            api(`/api/admin/categories/${id}`, { method: 'DELETE' })
+                .then(() => loadCategories());
+        }
+        
+        loadCategories();
+    </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <select class="form-select d-inline-block" style="width: 150px" id="filterOperation">
+                            <option value="">全部操作</option>
+                            <option value="CREATE_CATEGORY">创建分类</option>
+                            <option value="UPDATE_ARTICLE">修改文章</option>
+                            <option value="DELETE_ARTICLE">删除文章</option>
+                            <option value="UPDATE_USER_STATUS">修改用户状态</option>
+                            <option value="UPDATE_USER_ROLE">修改用户角色</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadLogs()">搜索</button>
+                    </div>
+                </div>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>操作人</th>
+                            <th>操作类型</th>
+                            <th>目标类型</th>
+                            <th>目标名称</th>
+                            <th>IP地址</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table">
+                        <tr><td colspan="7" class="text-center">加载中...</td></tr>
+                    </tbody>
+                </table>
+                
+                <nav>
+                    <ul class="pagination" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let currentPage = 0;
+        const pageSize = 10;
+        
+        function loadLogs(page = 0) {
+            currentPage = page;
+            const operation = document.getElementById('filterOperation').value;
+            
+            let url = `/api/admin/logs?page=${page}&size=${pageSize}`;
+            if (operation) url += `&operation=${operation}`;
+            
+            // Only SUPER_ADMIN can view logs
+            if (!isSuperAdmin) {
+                document.getElementById('log-table').innerHTML = '<tr><td colspan="7" class="text-center text-danger">无权限查看日志</td></tr>';
+                return;
+            }
+            
+            api(url).then(res => res.json()).then(data => {
+                const tbody = document.getElementById('log-table');
+                if (data.content.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">暂无数据</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.content.map(log => `
+                    <tr>
+                        <td>${log.id}</td>
+                        <td>${log.username}</td>
+                        <td><span class="badge bg-info">${log.operation}</span></td>
+                        <td>${log.targetType}</td>
+                        <td>${log.targetName || '-'}</td>
+                        <td>${log.ipAddress || '-'}</td>
+                        <td>${log.createdAt ? new Date(log.createdAt).toLocaleString() : '-'}</td>
+                    </tr>
+                `).join('');
+                
+                // Pagination
+                const totalPages = data.totalPages;
+                if (totalPages > 1) {
+                    let html = '';
+                    for (let i = 0; i < totalPages; i++) {
+                        html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadLogs(${i})">${i + 1}</a></li>`;
+                    }
+                    document.getElementById('pagination').innerHTML = html;
+                }
+            });
+        }
+        
+        loadLogs();
+    </script>
+</body>
+</html>

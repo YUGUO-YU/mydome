@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="admin/layout">
+<body>
+    <div th:fragment="content">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <select class="form-select d-inline-block" style="width: 120px" id="filterStatus">
+                            <option value="">全部状态</option>
+                            <option value="DRAFT">草稿</option>
+                            <option value="PUBLISHED">已发布</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadArticles()">搜索</button>
+                    </div>
+                </div>
+                
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>标题</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>状态</th>
+                            <th>浏览</th>
+                            <th>点赞</th>
+                            <th>评论</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="article-table">
+                        <tr><td colspan="10" class="text-center">加载中...</td></tr>
+                    </tbody>
+                </table>
+                
+                <nav>
+                    <ul class="pagination" id="pagination"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let currentPage = 0;
+        const pageSize = 10;
+        
+        function loadArticles(page = 0) {
+            currentPage = page;
+            const status = document.getElementById('filterStatus').value;
+            
+            let url = `/api/admin/articles?page=${page}&size=${pageSize}`;
+            if (status) url += `&status=${status}`;
+            
+            api(url).then(res => res.json()).then(data => {
+                const tbody = document.getElementById('article-table');
+                if (data.content.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center">暂无数据</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.content.map(article => `
+                    <tr>
+                        <td>${article.id}</td>
+                        <td>${article.title}</td>
+                        <td>${article.authorNickname || '-'}</td>
+                        <td>${article.categoryName || '-'}</td>
+                        <td><span class="badge bg-${article.status === 'PUBLISHED' ? 'success' : 'secondary'}">${article.status}</span></td>
+                        <td>${article.viewCount || 0}</td>
+                        <td>${article.likeCount || 0}</td>
+                        <td>${article.commentCount || 0}</td>
+                        <td>${article.createdAt ? new Date(article.createdAt).toLocaleDateString() : '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-${article.isTop ? 'warning' : 'primary'}" onclick="toggleTop(${article.id})">
+                                ${article.isTop ? '取消置顶' : '置顶'}
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteArticle(${article.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Pagination
+                const totalPages = data.totalPages;
+                if (totalPages > 1) {
+                    let html = '';
+                    for (let i = 0; i < totalPages; i++) {
+                        html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadArticles(${i})">${i + 1}</a></li>`;
+                    }
+                    document.getElementById('pagination').innerHTML = html;
+                }
+            });
+        }
+        
+        function toggleTop(id) {
+            api(`/api/admin/articles/${id}/top`, { method: 'PUT' })
+                .then(() => loadArticles(currentPage));
+        }
+        
+        function deleteArticle(id) {
+            if (!confirm('确定要删除该文章吗？')) return;
+            api(`/api/admin/articles/${id}`, { method: 'DELETE' })
+                .then(() => loadArticles(currentPage));
+        }
+        
+        loadArticles();
+    </script>
+</body>
+</html>

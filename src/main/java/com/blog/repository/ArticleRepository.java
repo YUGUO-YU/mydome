@@ -15,6 +15,15 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     Page<Article> findByStatus(String status, Pageable pageable);
 
+    @Query("SELECT a FROM Article a WHERE a.status = :status ORDER BY a.createdAt DESC")
+    List<Article> findByStatusOrderByCreatedAtDesc(@Param("status") String status, Pageable pageable);
+
+    @Query("SELECT a FROM Article a WHERE a.category.id = :categoryId AND a.status = :status ORDER BY a.createdAt DESC")
+    List<Article> findByCategoryIdAndStatusOrderByCreatedAtDesc(
+        @Param("categoryId") Long categoryId, 
+        @Param("status") String status, 
+        Pageable pageable);
+
     Page<Article> findByCategoryId(Long categoryId, Pageable pageable);
 
     @Query("SELECT a FROM Article a WHERE a.status = 'PUBLISHED' ORDER BY a.viewCount DESC")

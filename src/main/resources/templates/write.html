@@ -5,65 +5,220 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>写文章 - 个人博客</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/theme.css}" rel="stylesheet">
     <style>
-        body { background: #f5f5f5; }
-        .navbar { background: #2c3e50; }
+        .editor-header {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .editor-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            border: none;
+            border-bottom: 2px solid var(--border-color);
+            padding: 0.5rem 0;
+            width: 100%;
+            transition: var(--transition);
+        }
+        
+        .editor-title:focus {
+            outline: none;
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .editor-toolbar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .toolbar-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: white;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .toolbar-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .editor-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            min-height: 500px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .editor-content textarea {
+            width: 100%;
+            min-height: 450px;
+            border: none;
+            resize: none;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+        
+        .editor-content textarea:focus {
+            outline: none;
+        }
+        
+        .editor-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .word-count {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .word-count strong {
+            color: var(--text-primary);
+        }
+        
+        .publish-btn {
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+        }
+        
+        .preview-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+        }
+        
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-draft { background: #fef3c7; color: #d97706; }
+        .status-published { background: #d1fae5; color: #059669; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container">
-            <a class="navbar-brand" href="/">我的博客</a>
+            <a class="navbar-brand" href="/"><i class="bi bi-pencil-square me-2"></i>我的博客</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile">个人中心</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="mb-4">写文章</h4>
-                <div class="mb-3">
-                    <label class="form-label">标题</label>
-                    <input type="text" id="title" class="form-control" placeholder="请输入文章标题">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">分类</label>
+    <!-- 编辑器 -->
+    <div class="container py-4">
+        <div class="editor-header">
+            <input type="text" class="editor-title" id="title" placeholder="在这里输入文章标题..." required>
+            
+            <div class="row mt-3">
+                <div class="col-md-4">
                     <select id="category" class="form-select">
-                        <option value="">请选择分类</option>
+                        <option value="">选择分类</option>
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">封面图 URL</label>
-                    <input type="text" id="coverImage" class="form-control" placeholder="https://...">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="coverImage" placeholder="封面图 URL">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">摘要</label>
-                    <textarea id="summary" class="form-control" rows="2" placeholder="文章摘要"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">内容 (Markdown)</label>
-                    <textarea id="content" class="form-control" rows="15" placeholder="使用 Markdown 写作..."></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">状态</label>
+                <div class="col-md-4">
                     <select id="status" class="form-select">
-                        <option value="DRAFT">草稿</option>
-                        <option value="PUBLISHED">发布</option>
+                        <option value="DRAFT">🌫️ 存为草稿</option>
+                        <option value="PUBLISHED">🚀 发布文章</option>
                     </select>
                 </div>
-                <button class="btn btn-primary" onclick="saveArticle()">保存文章</button>
+            </div>
+        </div>
+        
+        <!-- Markdown 工具栏 -->
+        <div class="editor-toolbar">
+            <button class="toolbar-btn" onclick="insertText('**', '**')" title="加粗"><i class="bi bi-type-bold"></i></button>
+            <button class="toolbar-btn" onclick="insertText('*', '*')" title="斜体"><i class="bi bi-type-italic"></i></button>
+            <button class="toolbar-btn" onclick="insertText('# ')" title="标题"><i class="bi bi-type-h1"></i></button>
+            <button class="toolbar-btn" onclick="insertText('- ')" title="列表"><i class="bi bi-list-ul"></i></button>
+            <button class="toolbar-btn" onclick="insertText('> ')" title="引用"><i class="bi bi-quote"></i></button>
+            <button class="toolbar-btn" onclick="insertText('```\n', '\n```')" title="代码"><i class="bi bi-code-slash"></i></button>
+            <button class="toolbar-btn" onclick="insertText('[', '](url)')" title="链接"><i class="bi bi-link-45deg"></i></button>
+            <button class="toolbar-btn" onclick="insertText('![alt](', ')')" title="图片"><i class="bi bi-image"></i></button>
+        </div>
+        
+        <div class="editor-content">
+            <textarea id="content" placeholder="使用 Markdown 写作...
+
+# 一级标题
+## 二级标题
+
+**加粗文本**
+*斜体文本*
+
+- 列表项 1
+- 列表项 2
+
+> 引用文本
+
+```javascript
+// 代码块
+console.log('Hello World');
+```
+
+[超链接文本](https://example.com)
+![图片描述](image-url)" required></textarea>
+        </div>
+        
+        <div class="editor-footer">
+            <div class="word-count">
+                字数: <strong id="wordCount">0</strong> | 字符: <strong id="charCount">0</strong>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="preview-toggle">
+                    <input type="checkbox" class="form-check-input" id="previewMode">
+                    <label for="previewMode">预览模式</label>
+                </div>
+                <button class="btn btn-primary publish-btn" onclick="saveArticle()">
+                    <i class="bi bi-send me-2"></i>发布
+                </button>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Load categories
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+        
+        // 加载分类
         fetch('/api/categories')
             .then(res => res.json())
             .then(categories => {
@@ -72,25 +227,49 @@
                     select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
                 });
             });
-
-        // Save article
+        
+        // 字数统计
+        document.getElementById('content').addEventListener('input', () => {
+            const content = document.getElementById('content').value;
+            document.getElementById('wordCount').textContent = content.length ? content.trim().split(/\s+/).length : 0;
+            document.getElementById('charCount').textContent = content.length;
+        });
+        
+        // 插入 Markdown 语法
+        function insertText(before, after = '') {
+            const textarea = document.getElementById('content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selected = text.substring(start, end);
+            
+            textarea.value = text.substring(0, start) + before + selected + after + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = start + before.length;
+            textarea.selectionEnd = start + before.length + selected.length;
+        }
+        
+        // 保存文章
         function saveArticle() {
             const data = {
                 title: document.getElementById('title').value,
                 content: document.getElementById('content').value,
-                summary: document.getElementById('summary').value,
+                summary: document.getElementById('content').value.substring(0, 150) + '...',
                 coverImage: document.getElementById('coverImage').value,
                 categoryId: parseInt(document.getElementById('category').value) || null,
                 status: document.getElementById('status').value
             };
-
+            
             if (!data.title || !data.content) {
                 return alert('请填写标题和内容');
             }
-
-            fetch('/api/articles?authorId=1', {
+            
+            fetch('/api/articles', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
                 body: JSON.stringify(data)
             })
             .then(res => res.json())
